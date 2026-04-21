@@ -3,3 +3,4 @@ variables.data*
 saved_model/
 __pycache__/
 .venv/
+.env
