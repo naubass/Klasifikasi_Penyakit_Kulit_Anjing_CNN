@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DogSkin AI — Deteksi Penyakit Kulit Anjing</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --teal:    #0d9488;
+      --teal-dk: #0f766e;
+      --amber:   #d97706;
+      --cream:   #fef3c7;
+      --dark:    #0a1628;
+      --dark2:   #0f1f3d;
+      --card:    #111c32;
+      --border:  #1e3a5f;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--dark);
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+
+    /* ── Noise Texture Overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0; opacity: .4;
+    }
+
+    /* ── Navbar ── */
+    nav {
+      position: fixed; top: 0; width: 100%; z-index: 100;
+      background: rgba(10,22,40,.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-link {
+      color: #94a3b8;
+      transition: color .2s;
+      font-size: .875rem;
+      letter-spacing: .04em;
+    }
+    .nav-link:hover { color: #5eead4; }
+
+    /* ── Hero ── */
+    #hero {
+      min-height: 100vh;
+      display: flex; align-items: center;
+      position: relative; overflow: hidden;
+      padding-top: 5rem;
+    }
+
+    .hero-orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: .18;
+      animation: drift 8s ease-in-out infinite alternate;
+    }
+    .orb1 { width: 600px; height: 600px; background: #0d9488; top: -10%; left: -15%; }
+    .orb2 { width: 400px; height: 400px; background: #d97706; bottom: 5%; right: -10%; animation-delay: -4s; }
+    .orb3 { width: 300px; height: 300px; background: #1e40af; top: 40%; left: 50%; animation-delay: -2s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.08); }
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(13,148,136,.15);
+      border: 1px solid rgba(13,148,136,.4);
+      border-radius: 9999px;
+      padding: .35rem 1rem;
+      font-size: .78rem; letter-spacing: .08em; color: #5eead4;
+      text-transform: uppercase;
+      animation: fadeUp .6s ease both;
+    }
+
+    .hero-title {
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      line-height: 1.05;
+      letter-spacing: -.02em;
+      animation: fadeUp .7s .1s ease both;
+    }
+
+    .hero-title span { color: #5eead4; font-style: italic; }
+
+    .hero-sub {
+      font-size: 1.1rem; color: #94a3b8; max-width: 540px; line-height: 1.7;
+      animation: fadeUp .7s .2s ease both;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--teal), #0891b2);
+      color: #fff;
+      padding: .8rem 2rem;
+      border-radius: .5rem;
+      font-weight: 500;
+      transition: transform .2s, box-shadow .2s;
+      display: inline-flex; align-items: center; gap: .5rem;
+      box-shadow: 0 0 30px rgba(13,148,136,.35);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 45px rgba(13,148,136,.5); }
+
+    .btn-ghost {
+      border: 1px solid var(--border);
+      color: #94a3b8;
+      padding: .8rem 2rem;
+      border-radius: .5rem;
+      font-weight: 500;
+      transition: border-color .2s, color .2s;
+      display: inline-flex; align-items: center; gap: .5rem;
+    }
+    .btn-ghost:hover { border-color: #5eead4; color: #5eead4; }
+
+    /* ── Stats ── */
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      animation: fadeUp .6s ease both;
+    }
+    .stat-num { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: #5eead4; }
+
+    /* ── Section ── */
+    section { position: relative; z-index: 1; }
+
+    .section-label {
+      font-size: .72rem; letter-spacing: .18em; text-transform: uppercase;
+      color: #5eead4; margin-bottom: .75rem;
+    }
+
+    .section-title {
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    /* ── Analyze Tool ── */
+    #analyze { background: var(--dark2); }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 1.5rem;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color .3s, background .3s;
+      background: rgba(255,255,255,.02);
+    }
+    .upload-zone:hover, .upload-zone.drag { border-color: var(--teal); background: rgba(13,148,136,.06); }
+    .upload-zone.drag { animation: pulse-border .8s infinite; }
+
+    @keyframes pulse-border {
+      0%,100% { border-color: var(--teal); }
+      50%      { border-color: #5eead4; }
+    }
+
+    #preview-img {
+      max-height: 320px;
+      object-fit: contain;
+      border-radius: 1rem;
+      width: 100%;
+    }
+
+    /* ── Result Card ── */
+    .result-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1.5rem;
+      padding: 2rem;
+      animation: fadeUp .5s ease both;
+    }
+
+    .confidence-bar {
+      height: 8px;
+      border-radius: 9999px;
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+    }
+    .confidence-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    .advice-item {
+      display: flex; gap: .75rem; align-items: flex-start;
+      padding: .75rem 1rem;
+      border-radius: .75rem;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      font-size: .9rem; line-height: 1.6; color: #cbd5e1;
+      animation: fadeUp .4s ease both;
+    }
+    .advice-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      flex-shrink: 0; margin-top: .45rem;
+    }
+
+    /* ── Disease Cards ── */
+    .disease-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.75rem;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+      cursor: default;
+    }
+    .disease-card:hover {
+      transform: translateY(-6px);
+      border-color: rgba(94,234,212,.3);
+      box-shadow: 0 20px 40px rgba(0,0,0,.3);
+    }
+    .disease-icon {
+      font-size: 2.5rem;
+      width: 64px; height: 64px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 1rem;
+      background: rgba(255,255,255,.05);
+      margin-bottom: 1rem;
+    }
+
+    /* ── Gallery ── */
+    #gallery { background: var(--dark); }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .gallery-item {
+      border-radius: 1rem;
+      overflow: hidden;
+      position: relative;
+      aspect-ratio: 1;
+      cursor: pointer;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+    .gallery-item img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform .4s ease;
+    }
+    .gallery-item:hover img { transform: scale(1.08); }
+
+    .gallery-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(to top, rgba(10,22,40,.9) 0%, transparent 50%);
+      opacity: 0; transition: opacity .3s;
+      display: flex; align-items: flex-end; padding: 1rem;
+    }
+    .gallery-item:hover .gallery-overlay { opacity: 1; }
+
+    /* ── Clinic Cards ── */
+    .clinic-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      transition: border-color .2s;
+    }
+    .clinic-card:hover { border-color: rgba(13,148,136,.5); }
+
+    /* ── Footer ── */
+    footer {
+      background: #060e1c;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+
+    .loading-ring {
+      width: 48px; height: 48px;
+      border: 3px solid rgba(94,234,212,.2);
+      border-top-color: #5eead4;
+      border-radius: 50%;
+      animation: spin-slow .8s linear infinite;
+    }
+
+    /* Scroll reveal */
+    .reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s ease, transform .7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--dark); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ NAVBAR ══════════════ -->
+<nav>
+  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style="background:rgba(13,148,136,.2);border:1px solid rgba(13,148,136,.4);">🐾</div>
+      <span class="serif font-bold text-white text-lg">DogSkin <span style="color:#5eead4">AI</span></span>
+    </a>
+    <div class="hidden md:flex items-center gap-8">
+      <a href="#hero"     class="nav-link">Beranda</a>
+      <a href="#analyze"  class="nav-link">Analisis</a>
+      <a href="#diseases" class="nav-link">Penyakit</a>
+      <a href="#gallery"  class="nav-link">Galeri</a>
+      <a href="#clinic"   class="nav-link">Klinik</a>
+    </div>
+    <a href="#analyze" class="btn-primary text-sm py-2 px-4 hidden md:inline-flex">
+      Mulai Analisis →
+    </a>
+  </div>
+</nav>
+
+<!-- ══════════════ HERO ══════════════ -->
+<section id="hero">
+  <div class="hero-orb orb1"></div>
+  <div class="hero-orb orb2"></div>
+  <div class="hero-orb orb3"></div>
+
+  <div class="max-w-7xl mx-auto px-6 py-20 relative z-10 w-full">
+    <div class="max-w-3xl">
+      <div class="hero-badge mb-6">
+        <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
+        Didukung Deep Learning · ResNet50
+      </div>
+
+      <h1 class="hero-title mb-6">
+        Deteksi Penyakit<br>Kulit Anjing<br><span>Secara Cerdas</span>
+      </h1>
+
+      <p class="hero-sub mb-10">
+        Upload foto kulit anjing kamu dan dapatkan diagnosis berbasis AI dalam hitungan detik. Didukung model ResNet50 dengan akurasi <strong style="color:#5eead4">95%</strong>.
+      </p>
+
+      <div class="flex flex-wrap gap-4" style="animation: fadeUp .7s .3s ease both; opacity:0; animation-fill-mode:both">
+        <a href="#analyze" class="btn-primary">🔬 Mulai Analisis</a>
+        <a href="#diseases" class="btn-ghost">Lihat Penyakit</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20">
+      <div class="stat-card" style="animation-delay:.1s">
+        <div class="stat-num">95%</div>
+        <div class="text-sm text-slate-400 mt-1">Akurasi Model</div>
+      </div>
+      <div class="stat-card" style="animation-delay:.2s">
+        <div class="stat-num">6</div>
+        <div class="text-sm text-slate-400 mt-1">Kelas Penyakit</div>
+      </div>
+      <div class="stat-card" style="animation-delay:.3s">
+        <div class="stat-num">ResNet50</div>
+        <div class="text-sm text-slate-400 mt-1">Arsitektur CNN</div>
+      </div>
+      <div class="stat-card" style="animation-delay:.4s">
+        <div class="stat-num">&lt;3s</div>
+        <div class="text-sm text-slate-400 mt-1">Waktu Analisis</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ ANALYZE TOOL ══════════════ -->
+<section id="analyze" class="py-24">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-14 reveal">
+      <p class="section-label">Tools Utama</p>
+      <h2 class="section-title">Analisis Penyakit Kulit</h2>
+      <p class="text-slate-400 max-w-xl mx-auto">Upload foto kulit anjing kamu. Sistem AI akan memproses dan memberikan hasil diagnosis beserta saran penanganan.</p>
+    </div>
+
+    <div class="grid lg:grid-cols-2 gap-8 items-start">
+
+      <!-- Upload Panel -->
+      <div class="reveal">
+        <div id="upload-zone" class="upload-zone" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" accept="image/*" class="hidden" />
+          <div id="upload-placeholder">
+            <div class="text-5xl mb-4">📸</div>
+            <p class="text-white font-medium mb-1">Klik atau seret foto ke sini</p>
+            <p class="text-slate-400 text-sm">JPG, PNG, WEBP — maks 10MB</p>
+            <p class="text-xs text-slate-500 mt-3">Pastikan foto kulit anjing terlihat jelas</p>
+          </div>
+          <div id="preview-container" class="hidden">
+            <img id="preview-img" src="" alt="Preview" />
+            <p class="text-slate-400 text-sm mt-3" id="file-name"></p>
+          </div>
+        </div>
+
+        <button id="analyze-btn" onclick="analyzeImage()"
+          class="btn-primary w-full mt-4 justify-center py-3 opacity-50 cursor-not-allowed"
+          disabled>
+          🔬 Analisis Sekarang
+        </button>
+        <button id="reset-btn" onclick="resetTool()"
+          class="btn-ghost w-full mt-2 justify-center py-2.5 hidden text-sm">
+          ↺ Reset
+        </button>
+      </div>
+
+      <!-- Result Panel -->
+      <div id="result-panel">
+        <!-- Empty State -->
+        <div id="empty-state" class="result-card text-center py-16">
+          <div class="text-5xl mb-4 opacity-30">🐶</div>
+          <p class="text-slate-500">Hasil analisis akan muncul di sini</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="result-card text-center py-16 hidden">
+          <div class="loading-ring mx-auto mb-4"></div>
+          <p class="text-slate-400 text-sm">Sedang menganalisis gambar...</p>
+        </div>
+
+        <!-- Result State -->
+        <div id="result-state" class="hidden space-y-4">
+
+          <!-- Main Result -->
+          <div class="result-card">
+            <div class="flex items-start gap-4">
+              <div id="res-emoji" class="text-4xl w-16 h-16 flex items-center justify-center rounded-xl flex-shrink-0" style="background:rgba(255,255,255,.05)"></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs text-slate-500 uppercase tracking-widest mb-1">Kondisi Terdeteksi</p>
+                <h3 id="res-label" class="serif text-2xl font-bold text-white"></h3>
+                <p id="res-class" class="text-sm text-slate-400 mt-0.5"></p>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <p class="text-xs text-slate-500 mb-1">Keyakinan</p>
+                <p id="res-confidence" class="serif text-3xl font-bold" style="color:#5eead4"></p>
+              </div>
+            </div>
+            <div class="mt-4">
+              <div class="confidence-bar">
+                <div id="res-conf-bar" class="confidence-fill" style="width:0%;background:#5eead4"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="result-card">
+            <p class="text-xs text-slate-500 uppercase tracking-widest mb-3">Deskripsi</p>
+            <p id="res-description" class="text-slate-300 leading-relaxed"></p>
+          </div>
+
+          <!-- All Probabilities -->
+          <div class="result-card">
+            <p class="text-xs text-slate-500 uppercase tracking-widest mb-4">Probabilitas Semua Kelas</p>
+            <div id="res-probs" class="space-y-2.5"></div>
+          </div>
+
+          <!-- Advice -->
+          <div class="result-card">
+            <p class="text-xs text-slate-500 uppercase tracking-widest mb-4">💡 Saran Penanganan</p>
+            <div id="res-advice" class="space-y-2"></div>
+          </div>
+
+          <!-- Warning -->
+          <div class="result-card" style="border-color:rgba(217,119,6,.3);background:rgba(217,119,6,.05)">
+            <p class="text-amber-400 text-sm">⚠️ <strong>Perhatian:</strong> Hasil ini bersifat informatif dan bukan pengganti diagnosis dokter hewan profesional. Selalu konsultasikan kondisi hewan Anda ke dokter hewan.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ DISEASE INFO ══════════════ -->
+<section id="diseases" class="py-24" style="background:var(--dark2)">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-14 reveal">
+      <p class="section-label">Referensi</p>
+      <h2 class="section-title">Penyakit yang Dapat Dideteksi</h2>
+      <p class="text-slate-400 max-w-xl mx-auto">Sistem dapat mengenali 6 kondisi kulit anjing termasuk kondisi sehat.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Cards generated by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ GALLERY ══════════════ -->
+<section id="gallery" class="py-24">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-14 reveal">
+      <p class="section-label">Showcase</p>
+      <h2 class="section-title">Galeri Referensi</h2>
+      <p class="text-slate-400 max-w-xl mx-auto">Contoh visual kondisi kulit anjing untuk membantu identifikasi awal sebelum analisis.</p>
+    </div>
+
+    <div class="gallery-grid" id="gallery-grid">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ CLINIC ══════════════ -->
+<section id="clinic" class="py-24" style="background:var(--dark2)">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="text-center mb-14 reveal">
+      <p class="section-label">Hubungi Kami</p>
+      <h2 class="section-title">Klinik Hewan Terdekat</h2>
+      <p class="text-slate-400 max-w-xl mx-auto">Segera hubungi klinik hewan terpercaya di bawah ini untuk penanganan lebih lanjut.</p>
+    </div>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div class="clinic-card reveal" style="animation-delay:.1s">
+        <div class="text-2xl mb-3">🏥</div>
+        <h4 class="font-semibold text-white mb-1">Pet Care Veterinary Clinic</h4>
+        <p class="text-teal-400 font-mono text-sm mb-1">📞 (021) 123-4567</p>
+        <p class="text-slate-500 text-xs">Senin–Sabtu · 08.00–20.00</p>
+      </div>
+      <div class="clinic-card reveal" style="animation-delay:.2s">
+        <div class="text-2xl mb-3">🐾</div>
+        <h4 class="font-semibold text-white mb-1">Happy Paws Animal Hospital</h4>
+        <p class="text-teal-400 font-mono text-sm mb-1">📞 (021) 987-6543</p>
+        <p class="text-slate-500 text-xs">Senin–Minggu · 07.00–22.00</p>
+      </div>
+      <div class="clinic-card reveal" style="animation-delay:.3s">
+        <div class="text-2xl mb-3">💊</div>
+        <h4 class="font-semibold text-white mb-1">Klinik Hewan Sehat Selalu</h4>
+        <p class="text-teal-400 font-mono text-sm mb-1">📞 (021) 555-8888</p>
+        <p class="text-slate-500 text-xs">Senin–Jumat · 09.00–18.00</p>
+      </div>
+      <div class="clinic-card reveal" style="animation-delay:.4s">
+        <div class="text-2xl mb-3">🚑</div>
+        <h4 class="font-semibold text-white mb-1">Animal Wellness Center</h4>
+        <p class="text-teal-400 font-mono text-sm mb-1">📞 1500-738</p>
+        <p class="text-slate-500 text-xs">24 Jam · Setiap Hari</p>
+      </div>
+    </div>
+
+    <!-- Emergency Banner -->
+    <div class="mt-8 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 reveal"
+         style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2)">
+      <div>
+        <p class="text-red-400 font-semibold mb-1">🚨 Kondisi Darurat?</p>
+        <p class="text-slate-400 text-sm">Jika anjing kamu menunjukkan gejala parah, segera hubungi klinik hewan 24 jam.</p>
+      </div>
+      <a href="tel:1500738" class="btn-primary whitespace-nowrap" style="background:linear-gradient(135deg,#dc2626,#991b1b)">
+        📞 Hubungi Sekarang
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ FOOTER ══════════════ -->
+<footer class="py-10">
+  <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="flex items-center gap-2">
+      <span class="text-xl">🐾</span>
+      <span class="serif font-bold text-white">DogSkin <span style="color:#5eead4">AI</span></span>
+    </div>
+    <p class="text-slate-500 text-sm text-center">
+      Dibuat untuk keperluan penelitian skripsi · Bukan pengganti diagnosis profesional
+    </p>
+    <p class="text-slate-600 text-xs">© 2024 DogSkin AI</p>
+  </div>
+</footer>
+
+<!-- ══════════════ JAVASCRIPT ══════════════ -->
+<script>
+  // ── Disease Data ──────────────────────────────────────────────────────────
+  const DISEASES = [
+    {
+      key: "demodicosis", label: "Demodikosis", emoji: "🦠", color: "#a855f7",
+      description: "Disebabkan oleh tungau Demodex yang mengakibatkan kerontokan bulu dan iritasi kulit.",
+      tips: ["Pemeriksaan skin scraping oleh dokter hewan", "Obat antiparasit seperti ivermectin", "Hindari kontak dengan anjing lain"]
+    },
+    {
+      key: "Dermatitis", label: "Dermatitis", emoji: "🔴", color: "#ef4444",
+      description: "Peradangan kulit akibat alergi, infeksi, atau iritasi bahan tertentu.",
+      tips: ["Singkirkan penyebab iritasi", "Shampo hypoallergenic", "Konsultasi antihistamin ke dokter"]
+    },
+    {
+      key: "Fungal_infections", label: "Infeksi Jamur", emoji: "🍄", color: "#f59e0b",
+      description: "Pertumbuhan jamur berlebih menyebabkan pengelupasan dan kerontokan bulu.",
+      tips: ["Jaga kulit tetap kering", "Shampo antijamur", "Pisahkan dari hewan lain"]
+    },
+    {
+      key: "Hypersensitivity", label: "Hipersensitivitas", emoji: "⚠️", color: "#f97316",
+      description: "Reaksi berlebihan sistem imun terhadap alergen seperti kutu, serbuk sari, atau makanan.",
+      tips: ["Uji alergi di klinik hewan", "Obat pencegah kutu rutin", "Diet eliminasi jika perlu"]
+    },
+    {
+      key: "ringworm", label: "Ringworm", emoji: "🔵", color: "#3b82f6",
+      description: "Infeksi jamur menular dengan bercak bulat bersisik dan kebotakan pada kulit.",
+      tips: ["Tangani dengan sarung tangan!", "Isolasi dari hewan dan manusia lain", "Disinfeksi semua permukaan"]
+    },
+    {
+      key: "Healthy", label: "Sehat", emoji: "✅", color: "#22c55e",
+      description: "Kulit anjing dalam kondisi sehat tanpa tanda-tanda penyakit.",
+      tips: ["Pertahankan rutinitas perawatan", "Vaksinasi & antiparasit rutin", "Pemeriksaan dokter tiap 6 bulan"]
+    },
+  ];
+
+  // ── Gallery Data (placeholder using picsum) ───────────────────────────────
+  const GALLERY = [
+    { label: "Kulit Sehat", tag: "Healthy",           seed: 237 },
+    { label: "Dermatitis",  tag: "Dermatitis",         seed: 433 },
+    { label: "Ringworm",    tag: "Ringworm",           seed: 119 },
+    { label: "Demodikosis", tag: "Demodicosis",        seed: 612 },
+    { label: "Inf. Jamur",  tag: "Fungal Infections",  seed: 789 },
+    { label: "Alergi",      tag: "Hypersensitivity",   seed: 345 },
+    { label: "Sehat",       tag: "Healthy",            seed: 501 },
+    { label: "Dermatitis",  tag: "Dermatitis",         seed: 88  },
+  ];
+
+  // ── Render Disease Cards ──────────────────────────────────────────────────
+  const grid = document.querySelector('#diseases .grid');
+  DISEASES.forEach((d, i) => {
+    grid.innerHTML += `
+      <div class="disease-card reveal" style="animation-delay:${i * .07}s">
+        <div class="disease-icon">${d.emoji}</div>
+        <h3 class="font-semibold text-white text-lg mb-2">${d.label}</h3>
+        <p class="text-slate-400 text-sm leading-relaxed mb-4">${d.description}</p>
+        <div class="space-y-1.5">
+          ${d.tips.map(t => `
+            <div class="flex gap-2 text-xs text-slate-500">
+              <span style="color:${d.color};flex-shrink:0">▸</span>${t}
+            </div>`).join('')}
+        </div>
+        <div class="mt-4 pt-4 border-t" style="border-color:var(--border)">
+          <span class="text-xs px-2 py-1 rounded-full" style="background:${d.color}22;color:${d.color}">${d.key}</span>
+        </div>
+      </div>`;
+  });
+
+  // ── Render Gallery ────────────────────────────────────────────────────────
+  const galleryGrid = document.getElementById('gallery-grid');
+  GALLERY.forEach((g, i) => {
+    galleryGrid.innerHTML += `
+      <div class="gallery-item reveal" style="animation-delay:${i*.06}s">
+        <img src="https://picsum.photos/seed/${g.seed}/400/400" alt="${g.label}" loading="lazy" />
+        <div class="gallery-overlay">
+          <div>
+            <p class="text-white text-sm font-medium">${g.label}</p>
+            <p class="text-slate-400 text-xs">${g.tag}</p>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  // ── Upload & Drag-Drop ────────────────────────────────────────────────────
+  const zone      = document.getElementById('upload-zone');
+  const fileInput = document.getElementById('file-input');
+  const analyzeBtn = document.getElementById('analyze-btn');
+  let selectedFile = null;
+
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault(); zone.classList.remove('drag');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('preview-img').src = ev.target.result;
+      document.getElementById('file-name').textContent = file.name;
+      document.getElementById('upload-placeholder').classList.add('hidden');
+      document.getElementById('preview-container').classList.remove('hidden');
+    };
+    reader.readAsDataURL(file);
+    analyzeBtn.disabled = false;
+    analyzeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+  }
+
+  // ── Analyze ───────────────────────────────────────────────────────────────
+  async function analyzeImage() {
+    if (!selectedFile) return;
+
+    showState('loading');
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const res  = await fetch('/predict', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || 'Gagal memproses gambar');
+
+      renderResult(data);
+      showState('result');
+      document.getElementById('reset-btn').classList.remove('hidden');
+      document.getElementById('result-state').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    } catch (err) {
+      alert('❌ ' + err.message);
+      showState('empty');
+    }
+  }
+
+  function showState(state) {
+    document.getElementById('empty-state').classList.add('hidden');
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('result-state').classList.add('hidden');
+    if (state === 'empty')   document.getElementById('empty-state').classList.remove('hidden');
+    if (state === 'loading') document.getElementById('loading-state').classList.remove('hidden');
+    if (state === 'result')  document.getElementById('result-state').classList.remove('hidden');
+  }
+
+  function renderResult(data) {
+    document.getElementById('res-emoji').textContent = data.emoji;
+    document.getElementById('res-emoji').style.background = data.color + '22';
+    document.getElementById('res-label').textContent = data.label;
+    document.getElementById('res-class').textContent  = data.predicted_class;
+    document.getElementById('res-confidence').textContent = data.confidence + '%';
+    document.getElementById('res-confidence').style.color = data.color;
+    document.getElementById('res-description').textContent = data.description;
+
+    // Confidence bar
+    setTimeout(() => {
+      const bar = document.getElementById('res-conf-bar');
+      bar.style.width = data.confidence + '%';
+      bar.style.background = data.color;
+    }, 100);
+
+    // All probs
+    const probsEl = document.getElementById('res-probs');
+    probsEl.innerHTML = '';
+    data.all_probs.forEach(p => {
+      probsEl.innerHTML += `
+        <div>
+          <div class="flex justify-between text-xs mb-1">
+            <span class="text-slate-400">${p.label}</span>
+            <span style="color:${p.color}" class="font-mono">${p.prob}%</span>
+          </div>
+          <div class="confidence-bar">
+            <div class="confidence-fill" style="width:0%;background:${p.color}" 
+                 data-width="${p.prob}"></div>
+          </div>
+        </div>`;
+    });
+    setTimeout(() => {
+      document.querySelectorAll('#res-probs .confidence-fill').forEach(el => {
+        el.style.width = el.dataset.width + '%';
+      });
+    }, 150);
+
+    // Advice
+    const adviceEl = document.getElementById('res-advice');
+    adviceEl.innerHTML = '';
+    data.advice.forEach((a, i) => {
+      adviceEl.innerHTML += `
+        <div class="advice-item" style="animation-delay:${i*.07}s">
+          <div class="advice-dot" style="background:${data.color}"></div>
+          <span>${a}</span>
+        </div>`;
+    });
+  }
+
+  function resetTool() {
+    selectedFile = null;
+    fileInput.value = '';
+    document.getElementById('preview-img').src = '';
+    document.getElementById('upload-placeholder').classList.remove('hidden');
+    document.getElementById('preview-container').classList.add('hidden');
+    document.getElementById('reset-btn').classList.add('hidden');
+    analyzeBtn.disabled = true;
+    analyzeBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    showState('empty');
+  }
+
+  // ── Scroll Reveal ─────────────────────────────────────────────────────────
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── Smooth Scroll for nav links ───────────────────────────────────────────
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+</body>
+</html>
