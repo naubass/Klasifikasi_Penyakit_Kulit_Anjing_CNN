@@ -1,9 +1,9 @@
-fastapi
-uvicorn[standard]
-python-multipart
-pillow
-numpy
-tensorflow==2.19.0
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+pillow==10.4.0
+numpy==1.26.4
+tensorflow-cpu==2.19.0
+jinja2==3.1.4
+python-dotenv==1.0.1
 keras==3.13.2
-jinja2
-python-dotenv
