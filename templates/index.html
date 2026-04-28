@@ -1,482 +1,236 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DogSkin AI — Deteksi Penyakit Kulit Anjing</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --teal:    #0d9488;
-      --teal-dk: #0f766e;
-      --amber:   #d97706;
-      --cream:   #fef3c7;
-      --dark:    #0a1628;
-      --dark2:   #0f1f3d;
-      --card:    #111c32;
-      --border:  #1e3a5f;
+      --primary: #059669;
+      --primary-light: #ecfdf5;
+      --secondary: #0d9488;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
     }
 
-    * { box-sizing: border-box; }
-
     body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--dark);
-      color: #e2e8f0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
       overflow-x: hidden;
     }
 
     h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
 
-    /* ── Noise Texture Overlay ── */
-    body::before {
-      content: '';
-      position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 0; opacity: .4;
-    }
-
-    /* ── Navbar ── */
-    nav {
-      position: fixed; top: 0; width: 100%; z-index: 100;
-      background: rgba(10,22,40,.85);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .nav-link {
-      color: #94a3b8;
-      transition: color .2s;
-      font-size: .875rem;
-      letter-spacing: .04em;
-    }
-    .nav-link:hover { color: #5eead4; }
-
-    /* ── Hero ── */
-    #hero {
-      min-height: 100vh;
-      display: flex; align-items: center;
-      position: relative; overflow: hidden;
-      padding-top: 5rem;
-    }
-
-    .hero-orb {
-      position: absolute; border-radius: 50%;
-      filter: blur(80px); opacity: .18;
-      animation: drift 8s ease-in-out infinite alternate;
-    }
-    .orb1 { width: 600px; height: 600px; background: #0d9488; top: -10%; left: -15%; }
-    .orb2 { width: 400px; height: 400px; background: #d97706; bottom: 5%; right: -10%; animation-delay: -4s; }
-    .orb3 { width: 300px; height: 300px; background: #1e40af; top: 40%; left: 50%; animation-delay: -2s; }
-
-    @keyframes drift {
-      from { transform: translate(0, 0) scale(1); }
-      to   { transform: translate(30px, 20px) scale(1.08); }
-    }
-
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: .5rem;
-      background: rgba(13,148,136,.15);
-      border: 1px solid rgba(13,148,136,.4);
-      border-radius: 9999px;
-      padding: .35rem 1rem;
-      font-size: .78rem; letter-spacing: .08em; color: #5eead4;
-      text-transform: uppercase;
-      animation: fadeUp .6s ease both;
-    }
-
-    .hero-title {
-      font-size: clamp(2.8rem, 7vw, 5.5rem);
-      line-height: 1.05;
-      letter-spacing: -.02em;
-      animation: fadeUp .7s .1s ease both;
-    }
-
-    .hero-title span { color: #5eead4; font-style: italic; }
-
-    .hero-sub {
-      font-size: 1.1rem; color: #94a3b8; max-width: 540px; line-height: 1.7;
-      animation: fadeUp .7s .2s ease both;
+    .glass-nav {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--teal), #0891b2);
-      color: #fff;
-      padding: .8rem 2rem;
-      border-radius: .5rem;
-      font-weight: 500;
-      transition: transform .2s, box-shadow .2s;
-      display: inline-flex; align-items: center; gap: .5rem;
-      box-shadow: 0 0 30px rgba(13,148,136,.35);
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 15px -3px rgba(5, 150, 105, 0.3);
     }
-    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 0 45px rgba(13,148,136,.5); }
-
-    .btn-ghost {
-      border: 1px solid var(--border);
-      color: #94a3b8;
-      padding: .8rem 2rem;
-      border-radius: .5rem;
-      font-weight: 500;
-      transition: border-color .2s, color .2s;
-      display: inline-flex; align-items: center; gap: .5rem;
-    }
-    .btn-ghost:hover { border-color: #5eead4; color: #5eead4; }
-
-    /* ── Stats ── */
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 1rem;
-      padding: 1.5rem 2rem;
-      text-align: center;
-      animation: fadeUp .6s ease both;
-    }
-    .stat-num { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: #5eead4; }
-
-    /* ── Section ── */
-    section { position: relative; z-index: 1; }
-
-    .section-label {
-      font-size: .72rem; letter-spacing: .18em; text-transform: uppercase;
-      color: #5eead4; margin-bottom: .75rem;
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 25px -5px rgba(5, 150, 105, 0.4);
     }
 
-    .section-title {
-      font-size: clamp(2rem, 4vw, 3rem);
-      line-height: 1.1;
-      margin-bottom: 1rem;
-    }
-
-    /* ── Analyze Tool ── */
-    #analyze { background: var(--dark2); }
-
-    .upload-zone {
-      border: 2px dashed var(--border);
-      border-radius: 1.5rem;
-      padding: 3rem 2rem;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color .3s, background .3s;
-      background: rgba(255,255,255,.02);
-    }
-    .upload-zone:hover, .upload-zone.drag { border-color: var(--teal); background: rgba(13,148,136,.06); }
-    .upload-zone.drag { animation: pulse-border .8s infinite; }
-
-    @keyframes pulse-border {
-      0%,100% { border-color: var(--teal); }
-      50%      { border-color: #5eead4; }
-    }
-
-    #preview-img {
-      max-height: 320px;
-      object-fit: contain;
-      border-radius: 1rem;
-      width: 100%;
-    }
-
-    /* ── Result Card ── */
-    .result-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 1.5rem;
-      padding: 2rem;
-      animation: fadeUp .5s ease both;
-    }
-
-    .confidence-bar {
-      height: 8px;
-      border-radius: 9999px;
-      background: rgba(255,255,255,.08);
-      overflow: hidden;
-    }
-    .confidence-fill {
-      height: 100%;
-      border-radius: 9999px;
-      transition: width 1s cubic-bezier(.4,0,.2,1);
-    }
-
-    .advice-item {
-      display: flex; gap: .75rem; align-items: flex-start;
-      padding: .75rem 1rem;
-      border-radius: .75rem;
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.06);
-      font-size: .9rem; line-height: 1.6; color: #cbd5e1;
-      animation: fadeUp .4s ease both;
-    }
-    .advice-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      flex-shrink: 0; margin-top: .45rem;
-    }
-
-    /* ── Disease Cards ── */
-    .disease-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 1.25rem;
-      padding: 1.75rem;
-      transition: transform .25s, border-color .25s, box-shadow .25s;
-      cursor: default;
-    }
-    .disease-card:hover {
-      transform: translateY(-6px);
-      border-color: rgba(94,234,212,.3);
-      box-shadow: 0 20px 40px rgba(0,0,0,.3);
-    }
-    .disease-icon {
-      font-size: 2.5rem;
-      width: 64px; height: 64px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 1rem;
-      background: rgba(255,255,255,.05);
-      margin-bottom: 1rem;
-    }
-
-    /* ── Gallery ── */
-    #gallery { background: var(--dark); }
-
-    .gallery-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-    }
-
-    .gallery-item {
-      border-radius: 1rem;
-      overflow: hidden;
+    #camera-container {
       position: relative;
-      aspect-ratio: 1;
-      cursor: pointer;
-      background: var(--card);
-      border: 1px solid var(--border);
+      background: #000;
+      border-radius: 1.5rem;
+      overflow: hidden;
+      aspect-ratio: 4/3;
     }
-    .gallery-item img {
-      width: 100%; height: 100%; object-fit: cover;
-      transition: transform .4s ease;
-    }
-    .gallery-item:hover img { transform: scale(1.08); }
+    #video-feed { width: 100%; height: 100%; object-fit: cover; }
 
-    .gallery-overlay {
-      position: absolute; inset: 0;
-      background: linear-gradient(to top, rgba(10,22,40,.9) 0%, transparent 50%);
-      opacity: 0; transition: opacity .3s;
-      display: flex; align-items: flex-end; padding: 1rem;
+    .conf-track {
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 10px;
+      overflow: hidden;
     }
-    .gallery-item:hover .gallery-overlay { opacity: 1; }
-
-    /* ── Clinic Cards ── */
-    .clinic-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 1.25rem;
-      padding: 1.5rem;
-      transition: border-color .2s;
-    }
-    .clinic-card:hover { border-color: rgba(13,148,136,.5); }
-
-    /* ── Footer ── */
-    footer {
-      background: #060e1c;
-      border-top: 1px solid var(--border);
+    .conf-fill {
+      height: 100%;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* ── Animations ── */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(24px); }
-      to   { opacity: 1; transform: translateY(0); }
+    .card-shadow {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card-shadow:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
     }
 
-    @keyframes spin-slow { to { transform: rotate(360deg); } }
-
-    .loading-ring {
-      width: 48px; height: 48px;
-      border: 3px solid rgba(94,234,212,.2);
-      border-top-color: #5eead4;
-      border-radius: 50%;
-      animation: spin-slow .8s linear infinite;
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-
-    /* Scroll reveal */
-    .reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s ease, transform .7s ease; }
-    .reveal.visible { opacity: 1; transform: translateY(0); }
-
-    /* scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: var(--dark); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
   </style>
 </head>
 <body>
 
 <!-- ══════════════ NAVBAR ══════════════ -->
-<nav>
-  <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-    <a href="#" class="flex items-center gap-2">
-      <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style="background:rgba(13,148,136,.2);border:1px solid rgba(13,148,136,.4);">🐾</div>
-      <span class="serif font-bold text-white text-lg">DogSkin <span style="color:#5eead4">AI</span></span>
+<nav class="fixed top-0 w-full z-50 glass-nav">
+  <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+    <a href="#" class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-xl shadow-lg shadow-emerald-200 text-white">🐾</div>
+      <span class="serif font-bold text-slate-800 text-2xl">DogSkin <span class="text-emerald-600 italic">AI</span></span>
     </a>
     <div class="hidden md:flex items-center gap-8">
-      <a href="#hero"     class="nav-link">Beranda</a>
-      <a href="#analyze"  class="nav-link">Analisis</a>
-      <a href="#diseases" class="nav-link">Penyakit</a>
-      <a href="#gallery"  class="nav-link">Galeri</a>
-      <a href="#clinic"   class="nav-link">Klinik</a>
+      <a href="#hero" class="text-sm font-semibold text-slate-600 hover:text-emerald-600">Beranda</a>
+      <a href="#analyze" class="text-sm font-semibold text-slate-600 hover:text-emerald-600">Analisis</a>
+      <a href="#diseases" class="text-sm font-semibold text-slate-600 hover:text-emerald-600">Penyakit</a>
+      <a href="#clinic" class="text-sm font-semibold text-slate-600 hover:text-emerald-600">Klinik</a>
     </div>
-    <a href="#analyze" class="btn-primary text-sm py-2 px-4 hidden md:inline-flex">
-      Mulai Analisis →
-    </a>
+    <a href="#analyze" class="btn-primary px-6 py-2.5 rounded-full text-sm font-bold">Mulai Cek</a>
   </div>
 </nav>
 
 <!-- ══════════════ HERO ══════════════ -->
-<section id="hero">
-  <div class="hero-orb orb1"></div>
-  <div class="hero-orb orb2"></div>
-  <div class="hero-orb orb3"></div>
-
-  <div class="max-w-7xl mx-auto px-6 py-20 relative z-10 w-full">
-    <div class="max-w-3xl">
-      <div class="hero-badge mb-6">
-        <span class="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-        Didukung Deep Learning · ResNet50
+<section id="hero" class="pt-32 pb-20 px-6 bg-white relative overflow-hidden">
+  <div class="absolute top-0 right-0 w-96 h-96 bg-emerald-50 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2"></div>
+  <div class="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center relative z-10">
+    <div>
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold uppercase tracking-wider mb-6">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        FastAPI & ResNet-50 Backend
       </div>
-
-      <h1 class="hero-title mb-6">
-        Deteksi Penyakit<br>Kulit Anjing<br><span>Secara Cerdas</span>
+      <h1 class="text-5xl md:text-7xl font-extrabold text-slate-900 leading-tight mb-6">
+        Deteksi Masalah<br/>Kulit Anjing <span class="text-emerald-600 italic underline decoration-emerald-200 underline-offset-8">Instan</span>
       </h1>
-
-      <p class="hero-sub mb-10">
-        Upload foto kulit anjing kamu dan dapatkan diagnosis berbasis AI dalam hitungan detik. Didukung model ResNet50 dengan akurasi <strong style="color:#5eead4">95%</strong>.
+      <p class="text-lg text-slate-600 mb-10 max-w-lg">
+        Gunakan teknologi AI tercanggih untuk mengidentifikasi 6 jenis kondisi kulit anjing Anda melalui foto atau kamera langsung.
       </p>
-
-      <div class="flex flex-wrap gap-4" style="animation: fadeUp .7s .3s ease both; opacity:0; animation-fill-mode:both">
-        <a href="#analyze" class="btn-primary">🔬 Mulai Analisis</a>
-        <a href="#diseases" class="btn-ghost">Lihat Penyakit</a>
+      <div class="flex flex-wrap gap-4">
+        <a href="#analyze" class="btn-primary px-8 py-4 rounded-2xl font-bold text-lg">🔬 Mulai Analisis</a>
+        <a href="#diseases" class="bg-slate-50 px-8 py-4 rounded-2xl font-bold text-lg text-slate-700 border border-slate-200 hover:bg-slate-100 transition-all">Pelajari Penyakit</a>
       </div>
     </div>
-
-    <!-- Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-20">
-      <div class="stat-card" style="animation-delay:.1s">
-        <div class="stat-num">95%</div>
-        <div class="text-sm text-slate-400 mt-1">Akurasi Model</div>
-      </div>
-      <div class="stat-card" style="animation-delay:.2s">
-        <div class="stat-num">6</div>
-        <div class="text-sm text-slate-400 mt-1">Kelas Penyakit</div>
-      </div>
-      <div class="stat-card" style="animation-delay:.3s">
-        <div class="stat-num">ResNet50</div>
-        <div class="text-sm text-slate-400 mt-1">Arsitektur CNN</div>
-      </div>
-      <div class="stat-card" style="animation-delay:.4s">
-        <div class="stat-num">&lt;3s</div>
-        <div class="text-sm text-slate-400 mt-1">Waktu Analisis</div>
-      </div>
+    <div class="relative">
+      <img src="https://vitapet.com/media/vxrpgwe0/signs-of-a-healthy-dog-800x500.jpg?anchor=center&mode=crop&width=1240&rnd=132499400676230000" class="rounded-[2.5rem] shadow-2xl border-8 border-white" alt="Dog">
     </div>
   </div>
 </section>
 
 <!-- ══════════════ ANALYZE TOOL ══════════════ -->
-<section id="analyze" class="py-24">
+<section id="analyze" class="py-24 bg-slate-50">
   <div class="max-w-7xl mx-auto px-6">
-    <div class="text-center mb-14 reveal">
-      <p class="section-label">Tools Utama</p>
-      <h2 class="section-title">Analisis Penyakit Kulit</h2>
-      <p class="text-slate-400 max-w-xl mx-auto">Upload foto kulit anjing kamu. Sistem AI akan memproses dan memberikan hasil diagnosis beserta saran penanganan.</p>
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-slate-900 mb-4">Mulai Diagnosis</h2>
+      <p class="text-slate-500 max-w-xl mx-auto">Pastikan pencahayaan cukup dan area kulit terlihat jelas untuk hasil akurasi maksimal.</p>
     </div>
 
     <div class="grid lg:grid-cols-2 gap-8 items-start">
+      <!-- Input Panel -->
+      <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+        <div class="flex items-center gap-3 mb-6">
+          <span class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">1</span>
+          <h3 class="text-xl font-bold">Input Gambar</h3>
+        </div>
 
-      <!-- Upload Panel -->
-      <div class="reveal">
-        <div id="upload-zone" class="upload-zone" onclick="document.getElementById('file-input').click()">
-          <input type="file" id="file-input" accept="image/*" class="hidden" />
-          <div id="upload-placeholder">
-            <div class="text-5xl mb-4">📸</div>
-            <p class="text-white font-medium mb-1">Klik atau seret foto ke sini</p>
-            <p class="text-slate-400 text-sm">JPG, PNG, WEBP — maks 10MB</p>
-            <p class="text-xs text-slate-500 mt-3">Pastikan foto kulit anjing terlihat jelas</p>
+        <!-- Camera Area -->
+        <div id="camera-box" class="hidden mb-6 animate-fade-in">
+          <div id="camera-container">
+            <video id="video-feed" autoplay playsinline></video>
           </div>
-          <div id="preview-container" class="hidden">
-            <img id="preview-img" src="" alt="Preview" />
-            <p class="text-slate-400 text-sm mt-3" id="file-name"></p>
+          <div class="flex gap-3 mt-4">
+            <button onclick="capturePhoto()" class="btn-primary flex-1 py-3 rounded-xl font-bold">📸 Ambil Foto</button>
+            <button onclick="stopCamera()" class="bg-slate-100 text-slate-600 px-6 py-3 rounded-xl font-bold">Batal</button>
           </div>
         </div>
 
-        <button id="analyze-btn" onclick="analyzeImage()"
-          class="btn-primary w-full mt-4 justify-center py-3 opacity-50 cursor-not-allowed"
-          disabled>
-          🔬 Analisis Sekarang
-        </button>
-        <button id="reset-btn" onclick="resetTool()"
-          class="btn-ghost w-full mt-2 justify-center py-2.5 hidden text-sm">
-          ↺ Reset
-        </button>
+        <!-- Upload Area -->
+        <div id="dropzone" class="border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center hover:border-emerald-500 hover:bg-emerald-50 transition-all cursor-pointer" onclick="document.getElementById('file-input').click()">
+          <input type="file" id="file-input" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+          <div id="upload-placeholder">
+            <div class="text-5xl mb-4">🖼️</div>
+            <p class="font-bold text-slate-700">Klik untuk Unggah</p>
+            <p class="text-sm text-slate-400">atau seret foto ke sini</p>
+          </div>
+          <div id="preview-box" class="hidden">
+            <img id="preview-img" src="#" class="max-h-64 mx-auto rounded-xl shadow-md border-4 border-white mb-2">
+            <p id="file-info" class="text-xs text-slate-400 font-mono"></p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mt-6">
+          <button onclick="startCamera()" class="flex items-center justify-center gap-2 border-2 border-slate-100 py-4 rounded-2xl font-bold text-slate-600 hover:border-emerald-500 transition-all">
+            📷 Buka Kamera
+          </button>
+          <button id="analyze-btn" disabled onclick="processAnalysis()" class="btn-primary py-4 rounded-2xl font-bold disabled:opacity-30 disabled:cursor-not-allowed">
+            Analisis Sekarang
+          </button>
+        </div>
       </div>
 
       <!-- Result Panel -->
-      <div id="result-panel">
+      <div id="result-view" class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 min-h-[500px]">
         <!-- Empty State -->
-        <div id="empty-state" class="result-card text-center py-16">
-          <div class="text-5xl mb-4 opacity-30">🐶</div>
-          <p class="text-slate-500">Hasil analisis akan muncul di sini</p>
+        <div id="empty-state" class="h-full flex flex-col items-center justify-center text-center py-20">
+          <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-4xl mb-6">🔬</div>
+          <h3 class="text-xl font-bold text-slate-800">Menunggu Input</h3>
+          <p class="text-slate-400 max-w-xs mt-2">Hasil analisis akan muncul secara detail setelah Anda mengirim gambar.</p>
         </div>
 
         <!-- Loading State -->
-        <div id="loading-state" class="result-card text-center py-16 hidden">
-          <div class="loading-ring mx-auto mb-4"></div>
-          <p class="text-slate-400 text-sm">Sedang menganalisis gambar...</p>
+        <div id="loading-state" class="hidden h-full flex flex-col items-center justify-center text-center py-20">
+          <div class="w-12 h-12 border-4 border-emerald-100 border-t-emerald-600 rounded-full animate-spin mb-6"></div>
+          <p class="text-emerald-600 font-bold animate-pulse">Menghubungi Server FastAPI...</p>
         </div>
 
-        <!-- Result State -->
-        <div id="result-state" class="hidden space-y-4">
-
-          <!-- Main Result -->
-          <div class="result-card">
-            <div class="flex items-start gap-4">
-              <div id="res-emoji" class="text-4xl w-16 h-16 flex items-center justify-center rounded-xl flex-shrink-0" style="background:rgba(255,255,255,.05)"></div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs text-slate-500 uppercase tracking-widest mb-1">Kondisi Terdeteksi</p>
-                <h3 id="res-label" class="serif text-2xl font-bold text-white"></h3>
-                <p id="res-class" class="text-sm text-slate-400 mt-0.5"></p>
-              </div>
-              <div class="text-right flex-shrink-0">
-                <p class="text-xs text-slate-500 mb-1">Keyakinan</p>
-                <p id="res-confidence" class="serif text-3xl font-bold" style="color:#5eead4"></p>
-              </div>
-            </div>
-            <div class="mt-4">
-              <div class="confidence-bar">
-                <div id="res-conf-bar" class="confidence-fill" style="width:0%;background:#5eead4"></div>
-              </div>
+        <!-- Result Content -->
+        <div id="result-content" class="hidden space-y-8 animate-fade-in">
+          <div class="flex items-center gap-5 border-b pb-6">
+            <div id="res-emoji" class="text-5xl w-20 h-20 bg-emerald-50 rounded-2xl flex items-center justify-center"></div>
+            <div>
+              <p class="text-xs font-extrabold text-emerald-600 uppercase tracking-widest mb-1">Hasil Diagnosis</p>
+              <h3 id="res-label" class="text-3xl font-extrabold text-slate-900"></h3>
+              <p id="res-confidence-text" class="text-sm font-bold text-emerald-500"></p>
             </div>
           </div>
 
-          <!-- Description -->
-          <div class="result-card">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-3">Deskripsi</p>
-            <p id="res-description" class="text-slate-300 leading-relaxed"></p>
+          <!-- Main Probability Bar -->
+          <div class="bg-emerald-50/50 p-6 rounded-2xl border border-emerald-100">
+            <div class="flex justify-between items-end mb-3">
+              <span class="text-sm font-bold text-slate-600">Keyakinan AI</span>
+              <span id="res-percent" class="text-2xl font-black text-emerald-600">0%</span>
+            </div>
+            <div class="conf-track">
+              <div id="res-bar" class="conf-fill bg-emerald-500" style="width: 0%"></div>
+            </div>
           </div>
 
-          <!-- All Probabilities -->
-          <div class="result-card">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-4">Probabilitas Semua Kelas</p>
-            <div id="res-probs" class="space-y-2.5"></div>
+          <!-- Description & Advice -->
+          <div class="space-y-4">
+            <h4 class="font-bold text-slate-800 flex items-center gap-2">📋 Penjelasan</h4>
+            <p id="res-description" class="text-slate-600 text-sm leading-relaxed"></p>
+            
+            <h4 class="font-bold text-slate-800 flex items-center gap-2 pt-2">💡 Langkah Penanganan</h4>
+            <ul id="res-advice" class="grid gap-2"></ul>
           </div>
 
-          <!-- Advice -->
-          <div class="result-card">
-            <p class="text-xs text-slate-500 uppercase tracking-widest mb-4">💡 Saran Penanganan</p>
-            <div id="res-advice" class="space-y-2"></div>
+          <!-- Detailed Probability List -->
+          <div class="pt-6 border-t">
+            <h4 class="font-bold text-slate-800 mb-4 flex items-center gap-2">📊 Analisis Lengkap (Semua Kelas)</h4>
+            <div id="res-all-probs" class="space-y-3">
+              <!-- Bars generated here -->
+            </div>
           </div>
 
-          <!-- Warning -->
-          <div class="result-card" style="border-color:rgba(217,119,6,.3);background:rgba(217,119,6,.05)">
-            <p class="text-amber-400 text-sm">⚠️ <strong>Perhatian:</strong> Hasil ini bersifat informatif dan bukan pengganti diagnosis dokter hewan profesional. Selalu konsultasikan kondisi hewan Anda ke dokter hewan.</p>
-          </div>
-
+          <button onclick="resetApp()" class="w-full py-4 rounded-2xl border-2 border-slate-100 font-bold text-slate-400 hover:bg-slate-50 transition-all">
+            Ulangi Analisis
+          </button>
         </div>
       </div>
     </div>
@@ -484,324 +238,264 @@
 </section>
 
 <!-- ══════════════ DISEASE INFO ══════════════ -->
-<section id="diseases" class="py-24" style="background:var(--dark2)">
+<section id="diseases" class="py-24 bg-white">
   <div class="max-w-7xl mx-auto px-6">
-    <div class="text-center mb-14 reveal">
-      <p class="section-label">Referensi</p>
-      <h2 class="section-title">Penyakit yang Dapat Dideteksi</h2>
-      <p class="text-slate-400 max-w-xl mx-auto">Sistem dapat mengenali 6 kondisi kulit anjing termasuk kondisi sehat.</p>
+    <div class="text-center mb-16">
+      <h2 class="text-4xl font-bold text-slate-900">Database Penyakit</h2>
+      <p class="text-slate-500 mt-4">Pelajari karakteristik 6 jenis kondisi yang didukung oleh DogSkin AI.</p>
     </div>
-
-    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <!-- Cards generated by JS -->
+    <div id="disease-cards" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <!-- Generated via JS -->
     </div>
   </div>
 </section>
 
-<!-- ══════════════ GALLERY ══════════════ -->
-<section id="gallery" class="py-24">
-  <div class="max-w-7xl mx-auto px-6">
-    <div class="text-center mb-14 reveal">
-      <p class="section-label">Showcase</p>
-      <h2 class="section-title">Galeri Referensi</h2>
-      <p class="text-slate-400 max-w-xl mx-auto">Contoh visual kondisi kulit anjing untuk membantu identifikasi awal sebelum analisis.</p>
-    </div>
+<!-- ══════════════ CLINIC SECTION ══════════════ -->
+<section id="clinic" class="py-24 bg-emerald-950 text-white relative overflow-hidden">
+  <div class="max-w-7xl mx-auto px-6 relative z-10">
+    <div class="grid lg:grid-cols-3 gap-12 items-center">
+      <div class="lg:col-span-1">
+        <div class="w-16 h-16 bg-emerald-800 rounded-2xl flex items-center justify-center text-3xl mb-6 shadow-xl">🏥</div>
+        <h2 class="text-4xl font-bold mb-6">Konsultasi Lanjutan</h2>
+        <p class="text-emerald-100/70 mb-8 leading-relaxed">
+          Jangan tunda kesehatan anjing Anda. Hubungi jaringan klinik hewan terpercaya kami untuk penanganan medis yang lebih komprehensif dan profesional.
+        </p>
+        <div class="inline-flex items-center gap-4 bg-emerald-900/50 p-4 rounded-2xl border border-emerald-800">
+          <div class="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center">📞</div>
+          <div>
+            <p class="text-[10px] uppercase font-bold text-emerald-400 tracking-widest">Hotline Darurat</p>
+            <p class="text-lg font-bold">1500-DOG-CARE</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="lg:col-span-2 grid md:grid-cols-2 gap-6">
+        <!-- Clinic Card 1 -->
+        <div class="bg-white p-6 rounded-3xl text-slate-800 shadow-2xl">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="font-bold text-xl">Pet Care Veterinary</h4>
+            <span class="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded">24 JAM</span>
+          </div>
+          <p class="text-slate-500 text-sm mb-6 flex items-center gap-2">
+            <span>📍</span> Jl. Kesehatan No. 12, Jakarta Selatan
+          </p>
+          <a href="tel:0211234567" class="block w-full text-center py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all">
+            Hubungi Klinik
+          </a>
+        </div>
 
-    <div class="gallery-grid" id="gallery-grid">
-      <!-- filled by JS -->
+        <!-- Clinic Card 2 -->
+        <div class="bg-white p-6 rounded-3xl text-slate-800 shadow-2xl">
+          <div class="flex justify-between items-start mb-4">
+            <h4 class="font-bold text-xl">Happy Paws Hospital</h4>
+            <span class="px-2 py-1 bg-slate-100 text-slate-500 text-[10px] font-bold rounded">08:00 - 22:00</span>
+          </div>
+          <p class="text-slate-500 text-sm mb-6 flex items-center gap-2">
+            <span>📍</span> Boulevard Raya Blok B, Tangerang
+          </p>
+          <a href="tel:0219876543" class="block w-full text-center py-3 rounded-xl bg-slate-900 text-white font-bold text-sm hover:bg-slate-800 transition-all">
+            Hubungi Klinik
+          </a>
+        </div>
+      </div>
     </div>
   </div>
-</section>
-
-<!-- ══════════════ CLINIC ══════════════ -->
-<section id="clinic" class="py-24" style="background:var(--dark2)">
-  <div class="max-w-7xl mx-auto px-6">
-    <div class="text-center mb-14 reveal">
-      <p class="section-label">Hubungi Kami</p>
-      <h2 class="section-title">Klinik Hewan Terdekat</h2>
-      <p class="text-slate-400 max-w-xl mx-auto">Segera hubungi klinik hewan terpercaya di bawah ini untuk penanganan lebih lanjut.</p>
-    </div>
-
-    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-      <div class="clinic-card reveal" style="animation-delay:.1s">
-        <div class="text-2xl mb-3">🏥</div>
-        <h4 class="font-semibold text-white mb-1">Pet Care Veterinary Clinic</h4>
-        <p class="text-teal-400 font-mono text-sm mb-1">📞 (021) 123-4567</p>
-        <p class="text-slate-500 text-xs">Senin–Sabtu · 08.00–20.00</p>
-      </div>
-      <div class="clinic-card reveal" style="animation-delay:.2s">
-        <div class="text-2xl mb-3">🐾</div>
-        <h4 class="font-semibold text-white mb-1">Happy Paws Animal Hospital</h4>
-        <p class="text-teal-400 font-mono text-sm mb-1">📞 (021) 987-6543</p>
-        <p class="text-slate-500 text-xs">Senin–Minggu · 07.00–22.00</p>
-      </div>
-      <div class="clinic-card reveal" style="animation-delay:.3s">
-        <div class="text-2xl mb-3">💊</div>
-        <h4 class="font-semibold text-white mb-1">Klinik Hewan Sehat Selalu</h4>
-        <p class="text-teal-400 font-mono text-sm mb-1">📞 (021) 555-8888</p>
-        <p class="text-slate-500 text-xs">Senin–Jumat · 09.00–18.00</p>
-      </div>
-      <div class="clinic-card reveal" style="animation-delay:.4s">
-        <div class="text-2xl mb-3">🚑</div>
-        <h4 class="font-semibold text-white mb-1">Animal Wellness Center</h4>
-        <p class="text-teal-400 font-mono text-sm mb-1">📞 1500-738</p>
-        <p class="text-slate-500 text-xs">24 Jam · Setiap Hari</p>
-      </div>
-    </div>
-
-    <!-- Emergency Banner -->
-    <div class="mt-8 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 reveal"
-         style="background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2)">
-      <div>
-        <p class="text-red-400 font-semibold mb-1">🚨 Kondisi Darurat?</p>
-        <p class="text-slate-400 text-sm">Jika anjing kamu menunjukkan gejala parah, segera hubungi klinik hewan 24 jam.</p>
-      </div>
-      <a href="tel:1500738" class="btn-primary whitespace-nowrap" style="background:linear-gradient(135deg,#dc2626,#991b1b)">
-        📞 Hubungi Sekarang
-      </a>
-    </div>
-  </div>
+  
+  <!-- Decorative Orbs -->
+  <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-800/30 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+  <div class="absolute bottom-0 left-0 w-[300px] h-[300px] bg-emerald-600/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
 </section>
 
 <!-- ══════════════ FOOTER ══════════════ -->
-<footer class="py-10">
-  <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-    <div class="flex items-center gap-2">
-      <span class="text-xl">🐾</span>
-      <span class="serif font-bold text-white">DogSkin <span style="color:#5eead4">AI</span></span>
+<footer class="py-12 bg-white border-t border-slate-100">
+  <div class="max-w-7xl mx-auto px-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+      <div>
+        <div class="flex items-center justify-center md:justify-start gap-2 mb-4">
+          <span class="text-2xl">🐾</span>
+          <span class="serif font-bold text-slate-800 text-xl">DogSkin <span class="text-emerald-600 italic">AI</span></span>
+        </div>
+        <p class="text-slate-400 text-xs max-w-xs">
+          Platform deteksi penyakit kulit anjing berbasis ResNet-50. Dibuat untuk tujuan edukasi dan diagnosis dini hewan peliharaan.
+        </p>
+      </div>
+      
+      <div class="text-xs text-slate-400 space-y-1">
+        <p>© 2024 DogSkin AI. All Rights Reserved.</p>
+        <p>Built with FastAPI & TensorFlow.</p>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-emerald-600 cursor-pointer transition-all">📱</div>
+        <div class="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:text-emerald-600 cursor-pointer transition-all">📸</div>
+      </div>
     </div>
-    <p class="text-slate-500 text-sm text-center">
-      Dibuat untuk keperluan penelitian skripsi · Bukan pengganti diagnosis profesional
-    </p>
-    <p class="text-slate-600 text-xs">© 2024 DogSkin AI</p>
   </div>
 </footer>
 
-<!-- ══════════════ JAVASCRIPT ══════════════ -->
 <script>
-  // ── Disease Data ──────────────────────────────────────────────────────────
-  const DISEASES = [
-    {
-      key: "demodicosis", label: "Demodikosis", emoji: "🦠", color: "#a855f7",
-      description: "Disebabkan oleh tungau Demodex yang mengakibatkan kerontokan bulu dan iritasi kulit.",
-      tips: ["Pemeriksaan skin scraping oleh dokter hewan", "Obat antiparasit seperti ivermectin", "Hindari kontak dengan anjing lain"]
-    },
-    {
-      key: "Dermatitis", label: "Dermatitis", emoji: "🔴", color: "#ef4444",
-      description: "Peradangan kulit akibat alergi, infeksi, atau iritasi bahan tertentu.",
-      tips: ["Singkirkan penyebab iritasi", "Shampo hypoallergenic", "Konsultasi antihistamin ke dokter"]
-    },
-    {
-      key: "Fungal_infections", label: "Infeksi Jamur", emoji: "🍄", color: "#f59e0b",
-      description: "Pertumbuhan jamur berlebih menyebabkan pengelupasan dan kerontokan bulu.",
-      tips: ["Jaga kulit tetap kering", "Shampo antijamur", "Pisahkan dari hewan lain"]
-    },
-    {
-      key: "Hypersensitivity", label: "Hipersensitivitas", emoji: "⚠️", color: "#f97316",
-      description: "Reaksi berlebihan sistem imun terhadap alergen seperti kutu, serbuk sari, atau makanan.",
-      tips: ["Uji alergi di klinik hewan", "Obat pencegah kutu rutin", "Diet eliminasi jika perlu"]
-    },
-    {
-      key: "ringworm", label: "Ringworm", emoji: "🔵", color: "#3b82f6",
-      description: "Infeksi jamur menular dengan bercak bulat bersisik dan kebotakan pada kulit.",
-      tips: ["Tangani dengan sarung tangan!", "Isolasi dari hewan dan manusia lain", "Disinfeksi semua permukaan"]
-    },
-    {
-      key: "Healthy", label: "Sehat", emoji: "✅", color: "#22c55e",
-      description: "Kulit anjing dalam kondisi sehat tanpa tanda-tanda penyakit.",
-      tips: ["Pertahankan rutinitas perawatan", "Vaksinasi & antiparasit rutin", "Pemeriksaan dokter tiap 6 bulan"]
-    },
-  ];
+  // Global State
+  let selectedBlob = null;
+  let stream = null;
 
-  // ── Gallery Data (placeholder using picsum) ───────────────────────────────
-  const GALLERY = [
-    { label: "Kulit Sehat", tag: "Healthy",           seed: 237 },
-    { label: "Dermatitis",  tag: "Dermatitis",         seed: 433 },
-    { label: "Ringworm",    tag: "Ringworm",           seed: 119 },
-    { label: "Demodikosis", tag: "Demodicosis",        seed: 612 },
-    { label: "Inf. Jamur",  tag: "Fungal Infections",  seed: 789 },
-    { label: "Alergi",      tag: "Hypersensitivity",   seed: 345 },
-    { label: "Sehat",       tag: "Healthy",            seed: 501 },
-    { label: "Dermatitis",  tag: "Dermatitis",         seed: 88  },
-  ];
-
-  // ── Render Disease Cards ──────────────────────────────────────────────────
-  const grid = document.querySelector('#diseases .grid');
-  DISEASES.forEach((d, i) => {
-    grid.innerHTML += `
-      <div class="disease-card reveal" style="animation-delay:${i * .07}s">
-        <div class="disease-icon">${d.emoji}</div>
-        <h3 class="font-semibold text-white text-lg mb-2">${d.label}</h3>
-        <p class="text-slate-400 text-sm leading-relaxed mb-4">${d.description}</p>
-        <div class="space-y-1.5">
-          ${d.tips.map(t => `
-            <div class="flex gap-2 text-xs text-slate-500">
-              <span style="color:${d.color};flex-shrink:0">▸</span>${t}
-            </div>`).join('')}
-        </div>
-        <div class="mt-4 pt-4 border-t" style="border-color:var(--border)">
-          <span class="text-xs px-2 py-1 rounded-full" style="background:${d.color}22;color:${d.color}">${d.key}</span>
-        </div>
-      </div>`;
-  });
-
-  // ── Render Gallery ────────────────────────────────────────────────────────
-  const galleryGrid = document.getElementById('gallery-grid');
-  GALLERY.forEach((g, i) => {
-    galleryGrid.innerHTML += `
-      <div class="gallery-item reveal" style="animation-delay:${i*.06}s">
-        <img src="https://picsum.photos/seed/${g.seed}/400/400" alt="${g.label}" loading="lazy" />
-        <div class="gallery-overlay">
-          <div>
-            <p class="text-white text-sm font-medium">${g.label}</p>
-            <p class="text-slate-400 text-xs">${g.tag}</p>
-          </div>
-        </div>
-      </div>`;
-  });
-
-  // ── Upload & Drag-Drop ────────────────────────────────────────────────────
-  const zone      = document.getElementById('upload-zone');
-  const fileInput = document.getElementById('file-input');
+  const video = document.getElementById('video-feed');
   const analyzeBtn = document.getElementById('analyze-btn');
-  let selectedFile = null;
+  const previewImg = document.getElementById('preview-img');
+  const previewBox = document.getElementById('preview-box');
+  const uploadPlaceholder = document.getElementById('upload-placeholder');
 
-  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  // ── Media Handlers ─────────────────────────────────────────────────────────
 
-  zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
-  zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
-  zone.addEventListener('drop', e => {
-    e.preventDefault(); zone.classList.remove('drag');
-    handleFile(e.dataTransfer.files[0]);
-  });
-
-  function handleFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    selectedFile = file;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      document.getElementById('preview-img').src = ev.target.result;
-      document.getElementById('file-name').textContent = file.name;
-      document.getElementById('upload-placeholder').classList.add('hidden');
-      document.getElementById('preview-container').classList.remove('hidden');
-    };
-    reader.readAsDataURL(file);
-    analyzeBtn.disabled = false;
-    analyzeBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-  }
-
-  // ── Analyze ───────────────────────────────────────────────────────────────
-  async function analyzeImage() {
-    if (!selectedFile) return;
-
-    showState('loading');
-
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-
+  async function startCamera() {
     try {
-      const res  = await fetch('/predict', { method: 'POST', body: formData });
-      const data = await res.json();
-
-      if (!res.ok) throw new Error(data.detail || 'Gagal memproses gambar');
-
-      renderResult(data);
-      showState('result');
-      document.getElementById('reset-btn').classList.remove('hidden');
-      document.getElementById('result-state').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      video.srcObject = stream;
+      document.getElementById('camera-box').classList.remove('hidden');
+      document.getElementById('dropzone').classList.add('hidden');
     } catch (err) {
-      alert('❌ ' + err.message);
-      showState('empty');
+      alert("Izin kamera ditolak atau tidak tersedia.");
     }
   }
 
-  function showState(state) {
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      document.getElementById('camera-box').classList.add('hidden');
+      document.getElementById('dropzone').classList.remove('hidden');
+    }
+  }
+
+  function capturePhoto() {
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    
+    canvas.toBlob(blob => {
+      selectedBlob = blob;
+      const url = URL.createObjectURL(blob);
+      displayPreview(url, "tangkapan_kamera.jpg");
+      stopCamera();
+    }, 'image/jpeg');
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+      selectedBlob = file;
+      const url = URL.createObjectURL(file);
+      displayPreview(url, file.name);
+    }
+  }
+
+  function displayPreview(url, name) {
+    previewImg.src = url;
+    document.getElementById('file-info').innerText = name;
+    uploadPlaceholder.classList.add('hidden');
+    previewBox.classList.remove('hidden');
+    analyzeBtn.disabled = false;
+  }
+
+  // ── API Communication ──────────────────────────────────────────────────────
+
+  async function processAnalysis() {
+    if (!selectedBlob) return;
+
+    // UI Feedback
     document.getElementById('empty-state').classList.add('hidden');
-    document.getElementById('loading-state').classList.add('hidden');
-    document.getElementById('result-state').classList.add('hidden');
-    if (state === 'empty')   document.getElementById('empty-state').classList.remove('hidden');
-    if (state === 'loading') document.getElementById('loading-state').classList.remove('hidden');
-    if (state === 'result')  document.getElementById('result-state').classList.remove('hidden');
+    document.getElementById('result-content').classList.add('hidden');
+    document.getElementById('loading-state').classList.remove('hidden');
+    document.getElementById('result-view').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    const formData = new FormData();
+    formData.append('file', selectedBlob, "image.jpg");
+
+    try {
+      const response = await fetch('/predict', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) throw new Error("Gagal menghubungi server AI.");
+
+      const data = await response.json();
+      renderResult(data);
+    } catch (err) {
+      alert("Error: " + err.message);
+      resetApp();
+    }
   }
 
   function renderResult(data) {
-    document.getElementById('res-emoji').textContent = data.emoji;
+    // Basic Info
+    document.getElementById('res-emoji').innerText = data.emoji;
     document.getElementById('res-emoji').style.background = data.color + '22';
-    document.getElementById('res-label').textContent = data.label;
-    document.getElementById('res-class').textContent  = data.predicted_class;
-    document.getElementById('res-confidence').textContent = data.confidence + '%';
-    document.getElementById('res-confidence').style.color = data.color;
-    document.getElementById('res-description').textContent = data.description;
+    document.getElementById('res-label').innerText = data.label;
+    document.getElementById('res-percent').innerText = data.confidence + '%';
+    document.getElementById('res-description').innerText = data.description;
+    document.getElementById('res-bar').style.backgroundColor = data.color;
 
-    // Confidence bar
+    // Advice List
+    const adviceList = document.getElementById('res-advice');
+    adviceList.innerHTML = data.advice.map(item => `
+      <li class="flex items-start gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100 text-[11px] text-slate-600">
+        <span class="text-emerald-500 font-bold">✔</span> ${item}
+      </li>
+    `).join('');
+
+    // Full Probability List (Analisis Lengkap)
+    const allProbsContainer = document.getElementById('res-all-probs');
+    allProbsContainer.innerHTML = data.all_probs.map(p => `
+      <div class="space-y-1">
+        <div class="flex justify-between text-[10px] font-bold uppercase tracking-tighter">
+          <span class="text-slate-500">${p.label}</span>
+          <span style="color: ${p.color}">${p.prob}%</span>
+        </div>
+        <div class="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-full transition-all duration-1000" style="width: ${p.prob}%; background-color: ${p.color}"></div>
+        </div>
+      </div>
+    `).join('');
+
+    // Animate Primary Bar
     setTimeout(() => {
-      const bar = document.getElementById('res-conf-bar');
-      bar.style.width = data.confidence + '%';
-      bar.style.background = data.color;
+      document.getElementById('res-bar').style.width = data.confidence + '%';
     }, 100);
 
-    // All probs
-    const probsEl = document.getElementById('res-probs');
-    probsEl.innerHTML = '';
-    data.all_probs.forEach(p => {
-      probsEl.innerHTML += `
-        <div>
-          <div class="flex justify-between text-xs mb-1">
-            <span class="text-slate-400">${p.label}</span>
-            <span style="color:${p.color}" class="font-mono">${p.prob}%</span>
-          </div>
-          <div class="confidence-bar">
-            <div class="confidence-fill" style="width:0%;background:${p.color}" 
-                 data-width="${p.prob}"></div>
-          </div>
-        </div>`;
-    });
-    setTimeout(() => {
-      document.querySelectorAll('#res-probs .confidence-fill').forEach(el => {
-        el.style.width = el.dataset.width + '%';
-      });
-    }, 150);
-
-    // Advice
-    const adviceEl = document.getElementById('res-advice');
-    adviceEl.innerHTML = '';
-    data.advice.forEach((a, i) => {
-      adviceEl.innerHTML += `
-        <div class="advice-item" style="animation-delay:${i*.07}s">
-          <div class="advice-dot" style="background:${data.color}"></div>
-          <span>${a}</span>
-        </div>`;
-    });
+    // Toggle States
+    document.getElementById('loading-state').classList.add('hidden');
+    document.getElementById('result-content').classList.remove('hidden');
   }
 
-  function resetTool() {
-    selectedFile = null;
-    fileInput.value = '';
-    document.getElementById('preview-img').src = '';
-    document.getElementById('upload-placeholder').classList.remove('hidden');
-    document.getElementById('preview-container').classList.add('hidden');
-    document.getElementById('reset-btn').classList.add('hidden');
+  function resetApp() {
+    selectedBlob = null;
+    document.getElementById('file-input').value = "";
+    previewBox.classList.add('hidden');
+    uploadPlaceholder.classList.remove('hidden');
     analyzeBtn.disabled = true;
-    analyzeBtn.classList.add('opacity-50', 'cursor-not-allowed');
-    showState('empty');
+    document.getElementById('result-content').classList.add('hidden');
+    document.getElementById('empty-state').classList.remove('hidden');
+    document.getElementById('loading-state').classList.add('hidden');
   }
 
-  // ── Scroll Reveal ─────────────────────────────────────────────────────────
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.1 });
+  // ── Database Info Rendering ────────────────────────────────────────────────
+  const DISEASE_DB = [
+    { name: 'Dermatitis', emoji: '🔴', desc: 'Peradangan kulit akibat alergi atau iritasi.' },
+    { name: 'Infeksi Jamur', emoji: '🍄', desc: 'Pertumbuhan jamur berlebih yang menyebabkan kerak.' },
+    { name: 'Sehat', emoji: '✨', desc: 'Kondisi kulit optimal dan bebas penyakit.' },
+    { name: 'Hipersensitivitas', emoji: '⚠️', desc: 'Reaksi imun berlebih terhadap faktor luar.' },
+    { name: 'Demodikosis', emoji: '🦠', desc: 'Infeksi tungau parasit pada folikel rambut.' },
+    { name: 'Ringworm', emoji: '🔵', desc: 'Infeksi jamur menular berbentuk lingkaran.' }
+  ];
 
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // ── Smooth Scroll for nav links ───────────────────────────────────────────
-  document.querySelectorAll('a[href^="#"]').forEach(a => {
-    a.addEventListener('click', e => {
-      e.preventDefault();
-      const target = document.querySelector(a.getAttribute('href'));
-      if (target) target.scrollIntoView({ behavior: 'smooth' });
-    });
-  });
+  document.getElementById('disease-cards').innerHTML = DISEASE_DB.map(d => `
+    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 card-shadow">
+      <div class="text-3xl mb-4">${d.emoji}</div>
+      <h4 class="text-lg font-bold text-slate-800 mb-2">${d.name}</h4>
+      <p class="text-sm text-slate-500">${d.desc}</p>
+    </div>
+  `).join('');
 </script>
+
 </body>
 </html>
